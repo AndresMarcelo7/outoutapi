@@ -68,12 +68,12 @@ sonarqube {
         property "sonar.projectKey", "andres-marcelo-csdt-project_outout-api"
         property "sonar.organization", "andres-marcelo-csdt-project"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.coverage.jacoco.xmlReportPaths", "build/customJacocoReportDir/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "customJacocoReportDir/test/jacocoTestReport.xml"
     }
 }
 jacoco {
     toolVersion = "0.8.11"
-    reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
+    reportsDirectory = layout.projectDirectory.dir('customJacocoReportDir')
 }
 
 jacocoTestReport {
