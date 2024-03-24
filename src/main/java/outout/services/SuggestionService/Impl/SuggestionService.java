@@ -27,7 +27,7 @@ public class SuggestionService implements ISuggestionService {
             Suggestion newSuggestion = new Suggestion();
             newSuggestion.setSuggestedBy(username);
             newSuggestion.setSuggestion(suggestion.getRestaurant());
-            newSuggestion.setSuggestedDate(date);
+            newSuggestion.setSuggestedDate(new java.sql.Date(date.getTime()));
             suggestionRepository.createSuggestion(newSuggestion);
         }
         else{

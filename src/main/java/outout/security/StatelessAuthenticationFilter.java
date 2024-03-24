@@ -7,43 +7,50 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.web.filter.GenericFilterBean;
-
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 
-public class StatelessAuthenticationFilter extends GenericFilterBean {
+public class StatelessAuthenticationFilter extends OncePerRequestFilter {
 
     public String tokenSecret;
-    private SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
 
-    public StatelessAuthenticationFilter(final String tokenSecret) {
+    private final SecurityContextRepository repository;
+
+    public StatelessAuthenticationFilter(final String tokenSecret, SecurityContextRepository repository) {
         this.tokenSecret = tokenSecret;
+        this.repository = repository;
     }
 
+
     @Override
-    public void doFilter(final ServletRequest request,
-                         final ServletResponse response,
-                         final FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        HttpServletRequest httpServletRequest = request;
         String token = httpServletRequest.getHeader("X-AUTH-TOKEN");
-        Authentication authentication;
+        UsernamePasswordAuthenticationToken authentication;
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
         try {
             Jws<Claims> jsonWebToken = Jwts.parser()
                     .setSigningKey(tokenSecret)
                     .build().parseClaimsJws(token);
 
             String username = jsonWebToken.getBody().getSubject();
-            authentication = new UserAuthentication(username);
+            UserAuthentication user = new UserAuthentication(username);
+            authentication = new UsernamePasswordAuthenticationToken(user,null, user.getAuthorities());
         }
         catch(Exception exc) {
             authentication = null;
         }
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        chain.doFilter(request, response);
+        context.setAuthentication(authentication);
+        this.repository.saveContext(context, httpServletRequest, response);
+        SecurityContextHolder.setContext(context);
+        filterChain.doFilter(request, response);
     }
-
 }

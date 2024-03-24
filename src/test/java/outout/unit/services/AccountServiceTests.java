@@ -1,12 +1,5 @@
 package outout.unit.services;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import outout.model.User;
 import outout.repository.AccountRepository.Exceptions.AccountRepositoryException;
 import outout.repository.AccountRepository.IAccountRepository;
@@ -14,9 +7,18 @@ import outout.services.AccountService.IAccountService;
 import outout.services.AccountService.Impl.AccountService;
 import outout.view.AccountCredentials;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-@RunWith(MockitoJUnitRunner.class)
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@ExtendWith(MockitoExtension.class)
 public class AccountServiceTests {
 
     @Mock
@@ -24,10 +26,9 @@ public class AccountServiceTests {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private IAccountService accountService = new AccountService();
-
-
 
     @Test
     public void Should_Create_Account() throws AccountRepositoryException {
@@ -40,7 +41,6 @@ public class AccountServiceTests {
         accountService.createAccount(accountCredentials);
         //Assert
         Mockito.verify(accountRepository, Mockito.times(1)).createAccount(Mockito.any(User.class));
-
     }
 
     @Test
@@ -75,5 +75,4 @@ public class AccountServiceTests {
             assertEquals(AccountRepositoryException.class, e.getClass());
         }
     }
-
 }

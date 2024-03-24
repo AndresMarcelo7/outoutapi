@@ -14,6 +14,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import jakarta.servlet.Servlet;
@@ -39,11 +43,13 @@ public class OutoutApplication extends SpringBootServletInitializer {
         return new StandardPasswordEncoder(environment.getProperty("password.encoder.secret"));
     }
 
-//    @Bean
-//    public ServletRegistrationBean h2servletRegistration() {
-//        ServletRegistrationBean registration = new ServletRegistrationBean(new WebServlet());
-//        registration.addUrlMappings("/console/*");
-//        return registration;
-//    }
+    @Bean
+    public SecurityContextRepository securityContextRepository() {
+        return new DelegatingSecurityContextRepository(
+                new RequestAttributeSecurityContextRepository(),
+                new HttpSessionSecurityContextRepository()
+        );
+    }
+
 
 }

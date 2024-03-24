@@ -6,19 +6,25 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.authentication.AuthenticationManagerBeanDefinitionParser;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextRepository;
 import outout.security.StatelessAuthenticationFilter;
 
 import jakarta.servlet.Filter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private SecurityContextRepository repository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -26,7 +32,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authz) -> authz
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(statelessAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
+                .addFilterBefore(statelessAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable());
         return http.build();
     }
 
@@ -41,11 +49,13 @@ public class SecurityConfig {
                     path.startsWith("/v3/api-docs") ||
                     path.startsWith("/webjars/") ||
                     path.startsWith("/swagger-resources/") ||
-                    path.startsWith("/account/create"));
+                    path.startsWith("/account/create") ||
+                    path.startsWith("/error") );
         });
     }
 
+
     private Filter statelessAuthenticationFilter() {
-        return new StatelessAuthenticationFilter(environment.getProperty("token.secret"));
+        return new StatelessAuthenticationFilter(environment.getProperty("token.secret"), repository);
     }
 }
